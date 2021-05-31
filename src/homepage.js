@@ -8,12 +8,8 @@ import {
     Grid,
     Container,
     makeStyles,
-    withStyles,
     CardHeader,
     Card,
-    Switch,
-    FormControlLabel,
-    TextField,
     Select,
     MenuItem
 } from '@material-ui/core';
@@ -99,7 +95,7 @@ const Homepage = () => {
     const [enableGameList, setEnableGameList] = useState([]);
     const [disableGameList, setDisableGameList] = useState([]);
     const [loggedIn, setLoggedIn] = useState(false);
-
+    const [goGames, setGoGames] = useState(false);
     const genreList = ['Action', 'Adventure', 'Sport', 'Thriller', 'Strategy'];
 
     const getGameList = async function(app) {
@@ -112,7 +108,7 @@ const Homepage = () => {
         let disableTemp = [];
         let enableTemp = [];
         gamesList.map((e) => {
-            if (e.disable_comment == false) {
+            if (e.disable_comment === false) {
                 disableTemp.push(e.name);
             } else {
                 enableTemp.push(e.name);
@@ -256,7 +252,7 @@ const Homepage = () => {
                 alert('Invalid username!!')
             }
             console.log(result);
-            alert('The user is added!!');
+            alert('The user is logged in !!');
             window.location.reload()
         }
         catch {
@@ -577,6 +573,25 @@ const Homepage = () => {
                                 Log In
                             </Button>
                             {loggedIn && <Redirect to={{pathname:'/user', state:{ currentUserName: loginUserName }}}></Redirect>}
+                        </Card>
+                    </Grid>
+                    <Grid
+                        item
+                        lg={3}
+                        md={4}
+                        xl={4}
+                        xs={12}
+                    >
+                        <Card className={classes.card}>
+                            <CardHeader title="Look Games" /> 
+                            <br/>
+                            <Button
+                                variant="contained" 
+                                color="primary" 
+                                onClick={() => setGoGames(true)}>
+                                Go
+                            </Button>
+                            {goGames && <Redirect to={{pathname:'/games'}}></Redirect>}
                         </Card>
                     </Grid>
                 </Grid>

@@ -1,23 +1,19 @@
 import 'date-fns';
 import React, { useState, useRef } from "react";
 import Button from '@material-ui/core/Button';
+import { Redirect } from 'react-router-dom';
 import * as Realm from "realm-web";
 import {
     Grid,
     Container,
     makeStyles,
-    withStyles,
     CardHeader,
     Card,
-    Switch,
-    FormControlLabel,
-    TextField,
     Select,
     MenuItem,
     Table,
     TableBody,
     TableCell,
-    TableContainer,
     TableHead,
     TableRow
 } from '@material-ui/core';
@@ -91,7 +87,7 @@ const UserPage = (props) => {
         let disableTemp = [];
         let enableTemp = [];
         gamesList.map((e) => {
-            if (e.disable_comment == false) {
+            if (e.disable_comment === false) {
                 disableTemp.push(e.name);
             } else {
                 enableTemp.push(e.name);
@@ -134,7 +130,7 @@ const UserPage = (props) => {
     const [selectedGamePlay, setSelectedGamePlay] = useState('');
     const [comment, setComment] = useState('');
     const [rating, setRating] = useState('');
-
+    const [goGames, setGoGames] = useState(false);
     const handleChangeSelectedGameRate = (event) => {
         setSelectedGameRate(event.target.value);
       };
@@ -273,7 +269,7 @@ const UserPage = (props) => {
                                     <MenuItem value="" disabled>
                                         Name of the Game
                                     </MenuItem>
-                                    {enableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
+                                    {disableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
                             </Select>
                             <br/>
                             <input 
@@ -312,7 +308,7 @@ const UserPage = (props) => {
                                     <MenuItem value="" disabled>
                                         Name of the Game
                                     </MenuItem>
-                                    {enableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
+                                    {disableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
                             </Select>
                             <br/>
                             <Select
@@ -370,6 +366,25 @@ const UserPage = (props) => {
                             >
                                 Play
                             </Button>
+                        </Card>
+                    </Grid>
+                    <Grid
+                    item
+                        lg={3}
+                        md={4}
+                        xl={4}
+                        xs={12}
+                    >
+                        <Card className={classes.card}>
+                            <CardHeader title="Look Games" /> 
+                            <br/>
+                            <Button
+                                variant="contained" 
+                                color="primary" 
+                                onClick={() => setGoGames(true)}>
+                                Go
+                            </Button>
+                            {goGames && <Redirect to={{pathname:'/'}}></Redirect>}
                         </Card>
                     </Grid>
                 </Grid>
