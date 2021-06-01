@@ -63,24 +63,6 @@ const loginFunction = async function(app, credentials){
       }
 }
 
-const addTest = async function(app){
-    const mongodb = app.currentUser.mongoClient("mongodb-atlas");
-    const games = mongodb.db("OynasanaDB").collection("Games");
-    const result = await games.insertOne(
-        {
-          name: "CoD2",
-          genre: "Action",
-          photo: "EMPTY",
-          disable_rating: false,
-          disable_comment: false,
-              }
-    )
-    console.log(result);
-  }
-  
-
-
-
 const Homepage = () => {
 
     const classes = useStyles();

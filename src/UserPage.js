@@ -76,6 +76,7 @@ const UserPage = (props) => {
     const [enableGameList, setEnableGameList] = useState([]);
     const [disableGameList, setDisableGameList] = useState([]);
     const [commentList, setCommentList] = useState([]);
+    const [playedGameList, setPlayedGamesList] = useState([]);
 
     const getGameList = async function(app) {
 
@@ -100,28 +101,84 @@ const UserPage = (props) => {
         setDisableGameList(disableTemp);
         setGamesList(gameNameList);
     }
+    const getCanCommentOrRateGameList = async function(app){
+        const mongodb = app.currentUser.mongoClient("mongodb-atlas");
+        const games = mongodb.db("OynasanaDB").collection("Played");
+    
+        let playedGamesList = await games.find({user_name:localStorage.getItem('currentUserName')});
+        let playedGameNameList = [];
+        playedGamesList.map((e) => {
+            playedGameNameList.push(e.game_name);
+    });
+
+    setPlayedGamesList(playedGameNameList);
+    }
 
     const getCommentList = async function(app) {
 
         const mongodb = app.currentUser.mongoClient("mongodb-atlas");
         const comments = mongodb.db("OynasanaDB").collection("Comments");
     
-        let commentListt = await comments.find({});
+        let commentListt = await comments.find({user_name: localStorage.getItem('currentUserName')});
         //console.log("commentlist:", commentListt);
         let commentTempList = [];
         commentListt.map((e) => {
-            commentTempList.push({game: e.game_name, comment: e.comment});
+            commentTempList.push({game: e['game_name'], comment: e['comment']});
         }); 
-    
-        //console.log(commentTempList);
-    
+        console.log(commentTempList);
         setCommentList(commentTempList);
     }
+
+    const getMostPlayed = async function(app){
+        const mongodb = app.currentUser.mongoClient("mongodb-atlas");
+        const played = mongodb.db("OynasanaDB").collection("Played");
+        let result = await played.find({user_name: localStorage.getItem('currentUserName')});
+        var maxtime = 0;
+        var maxelname = '';
+        for (var i = 0; i < result.length; i++){
+            if(result[i]['played_time'] > maxtime){
+                maxtime = result[i]['played_time'];
+                maxelname = result[i]['game_name'];
+            }
+        }
+        setMostPlayedGame(maxelname);
+    }
+
+    const getTotalPlay = async function(app){
+        const mongodb = app.currentUser.mongoClient("mongodb-atlas");
+        const played = mongodb.db("OynasanaDB").collection("Played");
+        let result = await played.find({user_name: localStorage.getItem('currentUserName')});
+        var totaltime = 0;
+        for (var i = 0; i < result.length; i++){
+                totaltime += result[i]['played_time'];
+        }
+        setTotalPlayTime(totaltime);
+    }
+
+    const getAverageRating = async function(app){
+        const mongodb = app.currentUser.mongoClient("mongodb-atlas");
+        const ratings = mongodb.db("OynasanaDB").collection("Ratings");
+        var myratings = await ratings.find({user_name:localStorage.getItem('currentUserName')});
+        var user_dict = {}
+        var totalplay = 0;
+        var average = 0;
+        for(var j = 0 ; j < myratings.length; j++){
+                average += parseInt(myratings[j]['rating']);
+        }
+        setAverageRating(average/myratings.length);
+    }
+    const [mostPlayedGame,setMostPlayedGame] = useState('');
+    const [totalPlayTime,setTotalPlayTime] = useState(0);
+    const [averageRating,setAverageRating] = useState(0);  
 
     const willMount = useRef(true);
     if (willMount.current) {
         getGameList(app);
         getCommentList(app);
+        getCanCommentOrRateGameList(app);
+        getMostPlayed(app).then(console.log(mostPlayedGame));
+        getTotalPlay(app);
+        getAverageRating(app);
         willMount.current = false;
     }
 
@@ -129,7 +186,8 @@ const UserPage = (props) => {
     const [selectedGameComment, setSelectedGameComment] = useState('');
     const [selectedGamePlay, setSelectedGamePlay] = useState('');
     const [comment, setComment] = useState('');
-    const [rating, setRating] = useState('');
+    const [rating, setRating] = useState('');  
+
     const [goGames, setGoGames] = useState(false);
     const handleChangeSelectedGameRate = (event) => {
         setSelectedGameRate(event.target.value);
@@ -155,17 +213,25 @@ const UserPage = (props) => {
         try {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const comments = mongodb.db("OynasanaDB").collection("Comments");
-            const result = await comments.insertOne(
+            const result = await comments.updateOne(
                 {   user_name: localStorage.getItem('currentUserName'),
-                    game_name: game,
-                    comment: commentWrite },
+                    game_name: game
+                },
+                    {$set: 
+                        {
+                        user_name: localStorage.getItem('currentUserName'),
+                        game_name: game,
+                        comment: commentWrite
+                        }
+                    },
+                    {upsert:true}
                 );
-            console.log(result);
             alert('The comment is added!!');
             window.location.reload()
             //setAddGameState(initialAddGameState);
         }
-        catch {
+        catch(error){
+            console.log(error);
             alert('There is a problem!!')
         }
     }
@@ -174,10 +240,18 @@ const UserPage = (props) => {
         try {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const ratings = mongodb.db("OynasanaDB").collection("Ratings");
-            const result = await ratings.insertOne(
+            const result = await ratings.updateOne(
                 {   user_name: localStorage.getItem('currentUserName'),
-                    game_name: game,
-                    rating: ratingWrite },
+                    game_name: game
+                },
+                    {$set: 
+                        {
+                        user_name: localStorage.getItem('currentUserName'),
+                        game_name: game,
+                        rating: ratingWrite
+                        }
+                    },
+                    {upsert:true}
                 );
             console.log(result);
             alert('The rating is added!!');
@@ -192,14 +266,23 @@ const UserPage = (props) => {
     const playGame = async function(app,game){
         try {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
-            const ratings = mongodb.db("OynasanaDB").collection("Played");
-            const result = await ratings.insertOne(
+            const played = mongodb.db("OynasanaDB").collection("Played");
+            const old = await played.findOne({user_name:localStorage.getItem('currentUserName'),game_name: game});
+            var playtime = 0;
+            if(old != null){
+                playtime = old['played_time'];
+            }
+            const result = await played.updateOne(
                 {   user_name: localStorage.getItem('currentUserName'),
-                    game_name: game,
-                    played_time: 1 },
+                    game_name: game},
+                    {$set:    {user_name: localStorage.getItem('currentUserName'),
+                                game_name: game,
+                                played_time: playtime+1}
+                            },
+                    {upsert: true},
                 );
             console.log(result);
-            alert('The gameplay is added!!');
+            alert('The game is played for 1 hour more');
             window.location.reload()
             //setAddGameState(initialAddGameState);
         }
@@ -226,8 +309,9 @@ const UserPage = (props) => {
                         <Card className={classes.card}>
                             <CardHeader title="User Profile" /> 
                             <p>Username: <span style={{fontWeight: 'bold'}}>{localStorage.getItem('currentUserName')}</span> </p>
-                            <p>Most Played Game</p>
-                            <p>Total Play Time</p>
+                            <p>Most Played Game <span style={{fontWeight: 'bold'}}>{mostPlayedGame}</span></p>
+                            <p>Total Play Time (hr) <span style={{fontWeight: 'bold'}}>{totalPlayTime.toString()}</span></p>
+                            <p>Average of Ratings <span style={{fontWeight: 'bold'}}>{averageRating.toString()}</span></p>
                             <p>Comments</p>
                             <Table aria-label="simple table">
                                 <TableHead>
@@ -238,16 +322,15 @@ const UserPage = (props) => {
                                 </TableHead>
                                 <TableBody>
                                     {commentList.map((row) => {
-                                        <TableRow key={row.game}>
-                                            <TableCell component="th" scope="row">
-                                            {row.game}
+                                        <TableRow component="td" key={row.game}>
+                                            <TableCell scope="row">
+                                            row['game']
                                             </TableCell>
-                                            <TableCell align="left">{row.comment}</TableCell>
+                                            <TableCell align="left">row['comment']</TableCell>
                                         </TableRow>
                                     })}
                                 </TableBody>
                             </Table>
-                            <p>Average of Ratings</p>
                         </Card>
                     </Grid>
                     <Grid
@@ -269,7 +352,7 @@ const UserPage = (props) => {
                                     <MenuItem value="" disabled>
                                         Name of the Game
                                     </MenuItem>
-                                    {disableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
+                                    {playedGameList.filter(value => disableGameList.includes(value)).map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
                             </Select>
                             <br/>
                             <input 
@@ -308,7 +391,7 @@ const UserPage = (props) => {
                                     <MenuItem value="" disabled>
                                         Name of the Game
                                     </MenuItem>
-                                    {disableGameList.map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
+                                    {playedGameList.filter(value => disableGameList.includes(value)).map(game => <MenuItem key={game} value={game}>{game}</MenuItem>)}
                             </Select>
                             <br/>
                             <Select
@@ -364,7 +447,7 @@ const UserPage = (props) => {
                                 color="primary" 
                                 onClick={() => playGame(app,selectedGamePlay)}
                             >
-                                Play
+                                Play 1 Hour
                             </Button>
                         </Card>
                     </Grid>
