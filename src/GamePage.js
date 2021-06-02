@@ -10,7 +10,12 @@ import {
     makeStyles,
     CardHeader,
     Card,
-    CardMedia
+    CardMedia,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow
 } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
@@ -58,6 +63,7 @@ const loginFunction = async function(app, credentials){
       }
 }
 
+
 const GamePage = () => {
 
     const classes = useStyles();
@@ -69,6 +75,8 @@ const GamePage = () => {
 
     const [gamesList, setGamesList] = useState([]);
     const [commentList, setCommentList] = useState([]);
+    const [ratingList, setRatings] = useState([]);
+    const [playlist, setPlayList] = useState([]);
     const [goGames, setGoGames] = useState(false);
 
     const getGameList = async function(app) {
@@ -87,16 +95,40 @@ const GamePage = () => {
       let gameNameList = [];
       gamesList.map((e) => {
         gameNameList.push([e.name, e.genre, e.photo, e.release_date.toString()]);
-      }); 
-
-      let comments_advanced = [];
-      comments.map((e) => {
-        comments_advanced.push(
-          {}
-        )
-      })
+      });
       setGamesList(gameNameList);
-      setCommentList()
+      setCommentList(mycomments);
+      setRatings(myratings);
+      setPlayList(myplaylist);
+    }
+    const getRating = function(game_name){
+      var play_dict = {}
+      var game_plays = playlist.filter(value => value.game_name == game_name);
+      game_plays.map(value => play_dict[value.user_name]=value.played_time);
+
+      var rating_dict = {}
+      var game_ratings = ratingList.filter(value =>  value.game_name == game_name)
+      game_ratings.map(value => rating_dict[value.user_name]=value.rating);
+      var sum_play = 0;
+      game_plays.forEach(element => {
+        sum_play += element.played_time;
+      });
+      var result = 0;
+      for (const [key,value] of Object.entries(play_dict)){
+        if(rating_dict[key] !== undefined)
+        {
+          result += rating_dict[key] * value / sum_play;
+        }
+      }
+      return result;
+    }
+    const totalPlayTime = function(game_name){
+      var game_plays = playlist.filter(value => value.game_name == game_name);
+      var summa = 0;
+      game_plays.forEach(element => {
+        summa += element.played_time;
+      });
+      return summa;
     }
 
     const willMount = useRef(true);
@@ -129,7 +161,26 @@ const GamePage = () => {
                             />
                             <p style={{fontWeight: 'bold'}}>Genre: <span style={{fontWeight: 'normal'}}>{game[1]}</span></p>
                             <p style={{fontWeight: 'bold'}}>Release Date: <span style={{fontWeight: 'normal'}}><Moment format="YYYY/MM/DD">{game[3]}</Moment></span></p>
-                            <p style={{fontWeight: 'bold'}}>Rating: <span style={{fontWeight: 'normal'}}><Moment format="YYYY/MM/DD">{game[4]}</Moment></span></p>
+                            <p style={{fontWeight: 'bold'}}>Rating: {getRating(game[0])}<span style={{fontWeight: 'normal'}}></span></p>
+                            <p style={{fontWeight: 'bold'}}>Total Play Time: {totalPlayTime(game[0])}<span style={{fontWeight: 'normal'}}></span></p>
+                            <Table aria-label="simple table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell style={{fontWeight: 'bold'}}>User Name</TableCell>
+                                        <TableCell align="left" style={{fontWeight: 'bold'}}>Comment</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                {commentList.filter(value => value.game_name == game[0]).map((row) => (
+                                        <TableRow component="td" key={row.game}>
+                                            <TableCell scope="row">
+                                            {row['user_name']}
+                                            </TableCell>
+                                            <TableCell align="left">{row['comment']}</TableCell>
+                                        </TableRow>
+                                    ))} 
+                                </TableBody>
+                            </Table>
                         </Card>
                     </Grid>
                     ))}
@@ -156,4 +207,5 @@ const GamePage = () => {
         </>
     );    
 }
+
 export default GamePage;
