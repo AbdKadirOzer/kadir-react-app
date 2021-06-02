@@ -55,8 +55,6 @@ const loginFunction = async function(app, credentials){
     try {
         // Authenticate the user
         const user = await app.logIn(credentials);
-        //assert(user.id === app.currentUser.id)
-        //console.log("Succesfully logged in ! ", user)
         return user
       } catch(err) {
         console.error("Failed to log in", err);
@@ -81,7 +79,6 @@ const Homepage = () => {
     const genreList = ['Action', 'Adventure', 'Sport', 'Thriller', 'Strategy'];
 
     const getGameList = async function(app) {
-
         const mongodb = app.currentUser.mongoClient("mongodb-atlas");
         const games = mongodb.db("OynasanaDB").collection("Games");
     
@@ -98,7 +95,6 @@ const Homepage = () => {
             gameNameList.push(e.name);
         }); 
     
-        //console.log(gameNameList);
         setEnableGameList(enableTemp);
         setDisableGameList(disableTemp);
         setGamesList(gameNameList);
@@ -110,13 +106,11 @@ const Homepage = () => {
         const users = mongodb.db("OynasanaDB").collection("User");
     
         let userList = await users.find({});
-        console.log("userlist:", userList);
         let userNameList = [];
         userList.map((e) => {
             userNameList.push(e.name);
         }); 
     
-        //console.log(gameNameList);
     
         setUserList(userNameList);
     }
@@ -197,7 +191,6 @@ const Homepage = () => {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const games = mongodb.db("OynasanaDB").collection("Games");
             const result = await games.insertOne(data);
-            console.log(result);
             alert('The game is added!!');
             setAddGameState(initialAddGameState);
             window.location.reload()
@@ -212,7 +205,6 @@ const Homepage = () => {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const users = mongodb.db("OynasanaDB").collection("User");
             const result = await users.insertOne({name: data});
-            console.log(result);
             alert('The user is added!!');
             window.location.reload()
 
@@ -233,7 +225,6 @@ const Homepage = () => {
             } else {
                 alert('Invalid username!!')
             }
-            console.log(result);
             alert('The user is logged in !!');
             window.location.reload()
         }
@@ -247,7 +238,6 @@ const Homepage = () => {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const games = mongodb.db("OynasanaDB").collection("Games");
             const result = await games.deleteOne({ name: removedName });
-            console.log(result);
             alert('The game is removed!!');
             window.location.reload()
             //setAddGameState(initialAddGameState);
@@ -264,7 +254,6 @@ const Homepage = () => {
             const result = await games.updateOne(
                 { name: updatedName },
                 { $set: { disable_comment: true } });
-            console.log(result);
             alert('The game is disabled!!');
             window.location.reload()
             //setAddGameState(initialAddGameState);
@@ -281,7 +270,6 @@ const Homepage = () => {
             const result = await games.updateOne(
                 { name: updatedName },
                 { $set: { disable_comment: false } });
-            console.log(result);
             alert('The game is enabled!!');
             window.location.reload()
             //setAddGameState(initialAddGameState);
@@ -296,10 +284,8 @@ const Homepage = () => {
             const mongodb = app.currentUser.mongoClient("mongodb-atlas");
             const users = mongodb.db("OynasanaDB").collection("User");
             const result = await users.deleteOne({ name: removedName });
-            console.log(result);
             alert('The user is removed!!');
             window.location.reload()
-            //setAddGameState(initialAddGameState);
         }
         catch {
             alert('There is a problem!!')

@@ -1,7 +1,7 @@
 import 'date-fns';
 import React, { useState, useRef } from "react";
 import Button from '@material-ui/core/Button';
-import { Redirect } from 'react-router-dom';
+import { Redirect, Link } from 'react-router-dom';
 import * as Realm from "realm-web";
 import {
     Grid,
@@ -17,6 +17,7 @@ import {
     TableHead,
     TableRow
 } from '@material-ui/core';
+import transitions from '@material-ui/core/styles/transitions';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -54,8 +55,6 @@ const loginFunction = async function(app, credentials){
     try {
         // Authenticate the user
         const user = await app.logIn(credentials);
-        //assert(user.id === app.currentUser.id)
-        //console.log("Succesfully logged in ! ", user)
         return user
       } catch(err) {
         console.error("Failed to log in", err);
@@ -96,7 +95,6 @@ const UserPage = (props) => {
             gameNameList.push(e.name);
         }); 
     
-        //console.log(gameNameList);
         setEnableGameList(enableTemp);
         setDisableGameList(disableTemp);
         setGamesList(gameNameList);
@@ -120,12 +118,11 @@ const UserPage = (props) => {
         const comments = mongodb.db("OynasanaDB").collection("Comments");
     
         let commentListt = await comments.find({user_name: localStorage.getItem('currentUserName')});
-        //console.log("commentlist:", commentListt);
         let commentTempList = [];
         commentListt.map((e) => {
             commentTempList.push({game: e['game_name'], comment: e['comment']});
+            //commentTempList.push(e['comment']);
         }); 
-        console.log(commentTempList);
         setCommentList(commentTempList);
     }
 
@@ -176,7 +173,7 @@ const UserPage = (props) => {
         getGameList(app);
         getCommentList(app);
         getCanCommentOrRateGameList(app);
-        getMostPlayed(app).then(console.log(mostPlayedGame));
+        getMostPlayed(app);
         getTotalPlay(app);
         getAverageRating(app);
         willMount.current = false;
@@ -228,10 +225,8 @@ const UserPage = (props) => {
                 );
             alert('The comment is added!!');
             window.location.reload()
-            //setAddGameState(initialAddGameState);
         }
         catch(error){
-            console.log(error);
             alert('There is a problem!!')
         }
     }
@@ -253,7 +248,6 @@ const UserPage = (props) => {
                     },
                     {upsert:true}
                 );
-            console.log(result);
             alert('The rating is added!!');
             window.location.reload()
             //setAddGameState(initialAddGameState);
@@ -281,7 +275,6 @@ const UserPage = (props) => {
                             },
                     {upsert: true},
                 );
-            console.log(result);
             alert('The game is played for 1 hour more');
             window.location.reload()
             //setAddGameState(initialAddGameState);
@@ -316,19 +309,19 @@ const UserPage = (props) => {
                             <Table aria-label="simple table">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Game</TableCell>
-                                        <TableCell align="left">Comment</TableCell>
+                                        <TableCell style={{fontWeight: 'bold'}}>Game</TableCell>
+                                        <TableCell align="left" style={{fontWeight: 'bold'}}>Comment</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {commentList.map((row) => {
+                                {commentList.map((row) => (
                                         <TableRow component="td" key={row.game}>
                                             <TableCell scope="row">
-                                            row['game']
+                                            {row['game']}
                                             </TableCell>
-                                            <TableCell align="left">row['comment']</TableCell>
+                                            <TableCell align="left">{row['comment']}</TableCell>
                                         </TableRow>
-                                    })}
+                                    ))} 
                                 </TableBody>
                             </Table>
                         </Card>
@@ -461,13 +454,33 @@ const UserPage = (props) => {
                         <Card className={classes.card}>
                             <CardHeader title="Look Games" /> 
                             <br/>
-                            <Button
+                            
+                                <Link to='/games'>
+                                <Button
                                 variant="contained" 
-                                color="primary" 
-                                onClick={() => setGoGames(true)}>
+                                color="primary" >
                                 Go
-                            </Button>
-                            {goGames && <Redirect to={{pathname:'/'}}></Redirect>}
+                                </Button>
+                                </Link>
+                            
+                        </Card>
+                    </Grid>
+                    <Grid
+                    item
+                        lg={3}
+                        md={4}
+                        xl={4}
+                        xs={12}
+                    >
+                        <Card className={classes.card}>
+                            <CardHeader title="Go Home" /> 
+                            <br/>
+                                <Link to='/'>
+                                <Button
+                                variant="contained" 
+                                color="primary" > Go </Button>
+                                </Link>
+                            
                         </Card>
                     </Grid>
                 </Grid>
