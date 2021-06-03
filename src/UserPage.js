@@ -116,12 +116,19 @@ const UserPage = (props) => {
 
         const mongodb = app.currentUser.mongoClient("mongodb-atlas");
         const comments = mongodb.db("OynasanaDB").collection("Comments");
-    
+        const games = mongodb.db("OynasanaDB").collection("Games");
+        let gamesList = await games.find({});
+        let gameNameList = [];
+        gamesList.map((e) => {
+            gameNameList.push(e.name);
+        }); 
+
         let commentListt = await comments.find({user_name: localStorage.getItem('currentUserName')});
         let commentTempList = [];
         commentListt.map((e) => {
+            if(gameNameList.includes(e['game_name'])){
             commentTempList.push({game: e['game_name'], comment: e['comment']});
-            //commentTempList.push(e['comment']);
+            }
         }); 
         setCommentList(commentTempList);
     }
@@ -129,11 +136,18 @@ const UserPage = (props) => {
     const getMostPlayed = async function(app){
         const mongodb = app.currentUser.mongoClient("mongodb-atlas");
         const played = mongodb.db("OynasanaDB").collection("Played");
+        const games = mongodb.db("OynasanaDB").collection("Games");
+        let gamesList = await games.find({});
+        let gameNameList = [];
+        gamesList.map((e) => {
+            gameNameList.push(e.name);
+        }); 
+        
         let result = await played.find({user_name: localStorage.getItem('currentUserName')});
         var maxtime = 0;
         var maxelname = '';
         for (var i = 0; i < result.length; i++){
-            if(result[i]['played_time'] > maxtime){
+            if(result[i]['played_time'] > maxtime && gameNameList.includes(result[i]['game_name'])){
                 maxtime = result[i]['played_time'];
                 maxelname = result[i]['game_name'];
             }
@@ -155,15 +169,31 @@ const UserPage = (props) => {
     const getAverageRating = async function(app){
         const mongodb = app.currentUser.mongoClient("mongodb-atlas");
         const ratings = mongodb.db("OynasanaDB").collection("Ratings");
+        const games = mongodb.db("OynasanaDB").collection("Games");
+        let gamesList = await games.find({});
+        let gameNameList = [];
+        gamesList.map((e) => {
+            gameNameList.push(e.name);
+        }); 
+        
         var myratings = await ratings.find({user_name:localStorage.getItem('currentUserName')});
         var user_dict = {}
         var totalplay = 0;
         var average = 0;
+        var size_average=0;
         for(var j = 0 ; j < myratings.length; j++){
-                average += parseInt(myratings[j]['rating']);
+                if(gameNameList.includes(myratings[j]['game_name']))
+                {   size_average += 1;
+                    average += parseInt(myratings[j]['rating']);
         }
-        setAverageRating(average/myratings.length);
     }
+        if(size_average==0){
+            setAverageRating(0);
+        }
+        else{
+        setAverageRating(average/size_average);
+        }
+}
     const [mostPlayedGame,setMostPlayedGame] = useState('');
     const [totalPlayTime,setTotalPlayTime] = useState(0);
     const [averageRating,setAverageRating] = useState(0);  

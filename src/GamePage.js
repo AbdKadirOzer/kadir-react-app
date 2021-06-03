@@ -78,6 +78,7 @@ const GamePage = () => {
     const [ratingList, setRatings] = useState([]);
     const [playlist, setPlayList] = useState([]);
     const [goGames, setGoGames] = useState(false);
+    const [userList, setUserList] = useState([]);
 
     const getGameList = async function(app) {
 
@@ -86,11 +87,19 @@ const GamePage = () => {
       const played = mongodb.db("OynasanaDB").collection("Played");
       const ratings = mongodb.db("OynasanaDB").collection("Ratings");
       const comments = mongodb.db("OynasanaDB").collection("Comments");
+      const users = mongodb.db("OynasanaDB").collection("User");
+
 
       let gamesList = await games.find({});
       let myplaylist = await played.find({});
       let myratings = await ratings.find({});
       let mycomments = await comments.find({});
+      let myuser = await users.find({});
+
+      let userNameList = [];
+      myuser.map((e) => {
+        userNameList.push(e.name);
+      });
 
       let gameNameList = [];
       gamesList.map((e) => {
@@ -100,14 +109,15 @@ const GamePage = () => {
       setCommentList(mycomments);
       setRatings(myratings);
       setPlayList(myplaylist);
+      setUserList(userNameList);
     }
     const getRating = function(game_name){
       var play_dict = {}
-      var game_plays = playlist.filter(value => value.game_name == game_name);
+      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_mame)));
       game_plays.map(value => play_dict[value.user_name]=value.played_time);
 
       var rating_dict = {}
-      var game_ratings = ratingList.filter(value =>  value.game_name == game_name)
+      var game_ratings = ratingList.filter(value =>  (value.game_name == game_name && userList.includes(value.user_mame)))
       game_ratings.map(value => rating_dict[value.user_name]=value.rating);
       var sum_play = 0;
       game_plays.forEach(element => {
@@ -123,7 +133,7 @@ const GamePage = () => {
       return result;
     }
     const totalPlayTime = function(game_name){
-      var game_plays = playlist.filter(value => value.game_name == game_name);
+      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_mame)));
       var summa = 0;
       game_plays.forEach(element => {
         summa += element.played_time;
@@ -171,7 +181,7 @@ const GamePage = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                {commentList.filter(value => value.game_name == game[0]).map((row) => (
+                                {commentList.filter(value => (value.game_name == game[0] && userList.includes(value.user_name))).map((row) => (
                                         <TableRow component="td" key={row.game}>
                                             <TableCell scope="row">
                                             {row['user_name']}
