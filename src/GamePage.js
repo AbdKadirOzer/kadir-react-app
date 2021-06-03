@@ -113,11 +113,11 @@ const GamePage = () => {
     }
     const getRating = function(game_name){
       var play_dict = {}
-      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_mame)));
+      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_name)));
       game_plays.map(value => play_dict[value.user_name]=value.played_time);
 
       var rating_dict = {}
-      var game_ratings = ratingList.filter(value =>  (value.game_name == game_name && userList.includes(value.user_mame)))
+      var game_ratings = ratingList.filter(value =>  (value.game_name == game_name && userList.includes(value.user_name)))
       game_ratings.map(value => rating_dict[value.user_name]=value.rating);
       var sum_play = 0;
       game_plays.forEach(element => {
@@ -133,7 +133,7 @@ const GamePage = () => {
       return result;
     }
     const totalPlayTime = function(game_name){
-      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_mame)));
+      var game_plays = playlist.filter(value => (value.game_name == game_name && userList.includes(value.user_name)));
       var summa = 0;
       game_plays.forEach(element => {
         summa += element.played_time;
